@@ -1,9 +1,9 @@
 import { WebPlugin } from '@capacitor/core';
-import { WifiPlugin } from './definitions';
+import { WifiPlugin, IWifiNetwork } from './definitions';
 export declare class WifiWeb extends WebPlugin implements WifiPlugin {
     constructor();
     scan(): Promise<{
-        value: string;
+        scan: IWifiNetwork[];
     }>;
     connect(_options: {
         ssid: string;

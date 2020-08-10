@@ -1,5 +1,5 @@
 import { WebPlugin } from '@capacitor/core';
-import { WifiPlugin } from './definitions';
+import { WifiPlugin, IWifiNetwork } from './definitions';
 
 export class WifiWeb extends WebPlugin implements WifiPlugin {
   constructor() {
@@ -9,19 +9,19 @@ export class WifiWeb extends WebPlugin implements WifiPlugin {
     });
   }
 
-  async scan(): Promise<{value: string}> {
-      return null;
+  async scan(): Promise<{ scan: IWifiNetwork[] }> {
+    return null;
   }
-  async connect(_options: { ssid: string, password?: string, authType?: string }): Promise<{ssid: string}> {
-    return {ssid: null};
+  async connect(_options: { ssid: string, password?: string, authType?: string }): Promise<{ ssid: string }> {
+    return { ssid: null };
   }
-  async connectPrefix(_options: { ssid: string, password?: string}): Promise<{ssid: string}> {
-    return {ssid: null};
+  async connectPrefix(_options: { ssid: string, password?: string }): Promise<{ ssid: string }> {
+    return { ssid: null };
   }
-  async getConnectedSSID(): Promise<{ssid: string}> {
+  async getConnectedSSID(): Promise<{ ssid: string }> {
     return { ssid: null }
   }
-  async getWifiIP(): Promise<{ip: string}> {
+  async getWifiIP(): Promise<{ ip: string }> {
     return { ip: null };
   }
 }
