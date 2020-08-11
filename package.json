@@ -1,6 +1,6 @@
 {
   "name": "capacitor-wifi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Capacitor Wifi Plugin",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -16,7 +16,7 @@
     "@capacitor/core": "latest"
   },
   "devDependencies": {
-    "typescript": "^3.2.4",
+    "typescript": "^3.9.7",
     "@capacitor/ios": "latest",
     "@capacitor/android": "latest"
   },
@@ -29,7 +29,8 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "wifi"
   ],
   "capacitor": {
     "ios": {
@@ -41,9 +42,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "digaus/capacitor-wifi"
+    "url": "https://github.com/HalleyAssist/capacitor-wifi"
   },
   "bugs": {
-    "url": "digaus/capacitor-wifi/issues"
+    "url": "https://github.com/HalleyAssist/capacitor-wifi/issues"
   }
 }

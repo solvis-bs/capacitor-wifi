@@ -12,6 +12,7 @@ export declare class WifiWeb extends WebPlugin implements WifiPlugin {
     }): Promise<{
         ssid: string;
     }>;
+    disconnect(): Promise<void>;
     connectPrefix(_options: {
         ssid: string;
         password?: string;

@@ -119,6 +119,9 @@ public class Wifi: CAPPlugin {
             call.error("ONLY_SUPPORTED_IOS_11")
         }
     }
+    @objc func disconnect(_ call: CAPPluginCall) {
+        call.success();
+    }
     @objc func connectPrefix(_ call: CAPPluginCall) {
         guard let ssid = call.options["ssid"] as? String else {
             call.reject("Must provide an ssid")
@@ -154,7 +157,7 @@ public class Wifi: CAPPlugin {
                 }
             }
         } else {
-            call.error("ONLY_SUPPORTED_IOS_11")
+            call.error("ONLY_SUPPORTED_IOS_13")
         }
     }
    

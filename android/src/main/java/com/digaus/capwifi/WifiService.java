@@ -39,6 +39,7 @@ public class WifiService {
     private static final int API_VERSION = Build.VERSION.SDK_INT;
 
     private PluginCall savedCall;
+    private PluginCall savedScanCall;
     private ConnectivityManager.NetworkCallback networkCallback;
 
     WifiManager wifiManager;
@@ -80,9 +81,9 @@ public class WifiService {
             String password =  call.getString("password");
 
             String connectedSSID = this.getWifiServiceInfo(call);
-            //this.forceWifiUsageQ(false, null, null);
 
             if (!ssid.equals(connectedSSID)) {
+                this.forceWifiUsageQ(false, null);
 
                 WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
                 builder.setSsid(ssid);
@@ -95,6 +96,7 @@ public class WifiService {
                 networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
                 networkRequestBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED);
                 networkRequestBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED);
+                networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
                 networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
                 NetworkRequest networkRequest = networkRequestBuilder.build();
                 this.forceWifiUsageQ(true, networkRequest);
@@ -103,6 +105,10 @@ public class WifiService {
             }
         }
 
+    }
+    public void disconnect(PluginCall call) {
+        this.forceWifiUsageQ(false, null);
+        call.success();
     }
     public void connectPrefix(PluginCall call) {
         this.savedCall = call;
@@ -113,9 +119,9 @@ public class WifiService {
             String password =  call.getString("password");
 
             String connectedSSID = this.getWifiServiceInfo(call);
-            //this.forceWifiUsageQ(false, null, null);
 
             if (!ssid.equals(connectedSSID)) {
+                this.forceWifiUsageQ(false, null);
 
                 WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
                 PatternMatcher ssidPattern = new PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX);
@@ -129,6 +135,7 @@ public class WifiService {
                 networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
                 networkRequestBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED);
                 networkRequestBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED);
+                networkRequestBuilder.removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
                 networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
                 NetworkRequest networkRequest = networkRequestBuilder.build();
                 this.forceWifiUsageQ(true, networkRequest);
@@ -143,13 +150,13 @@ public class WifiService {
      */
     public boolean scanNetwork(PluginCall call) {
         Log.v(TAG, "Entering startScan");
-        this.savedCall = call;
+        this.savedScanCall = call;
         final ScanSyncContext syncContext = new ScanSyncContext();
 
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 Log.v(TAG, "Entering onReceive");
-                PluginCall call = WifiService.this.savedCall;
+                PluginCall call = WifiService.this.savedScanCall;
                 synchronized (syncContext) {
                     if (syncContext.finished) {
                         Log.v(TAG, "In onReceive, already finished");
@@ -171,7 +178,7 @@ public class WifiService {
         this.bridge.execute(new Runnable() {
 
             public void run() {
-                PluginCall call = WifiService.this.savedCall;
+                PluginCall call = WifiService.this.savedScanCall;
 
                 Log.v(TAG, "Entering timeout");
 
@@ -563,47 +570,46 @@ public class WifiService {
     }
     public void forceWifiUsageQ(boolean useWifi, NetworkRequest networkRequest) {
         if (API_VERSION >= 29) {
+            final ConnectivityManager manager = (ConnectivityManager) this.context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
             if (useWifi) {
-                final ConnectivityManager manager = (ConnectivityManager) this.context
-                        .getSystemService(Context.CONNECTIVITY_SERVICE);
                 if (networkRequest == null) {
                     networkRequest = new NetworkRequest.Builder()
                             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                             .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                             .build();
                 }
-
-                manager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
+                this.networkCallback = new ConnectivityManager.NetworkCallback() {
                     @Override
                     public void onAvailable(Network network) {
                         manager.bindProcessToNetwork(network);
                         String currentSSID = WifiService.this.getWifiServiceInfo(null);
                         PluginCall call = WifiService.this.savedCall;
                         String ssid = call.getString("ssid");
-                        if (call.getMethodName().equals("connectPrefix") && currentSSID.startsWith(ssid) || call.getMethodName().equals("connect") && currentSSID.equals(ssid)) {
+                        Log.v(TAG, "onAvailable: '" + currentSSID + "' == '" + ssid + "'");
+                        Log.v(TAG, call.getMethodName());
+                        if ((call.getMethodName().equals("connectPrefix") && currentSSID.startsWith(ssid)) || (call.getMethodName().equals("connect") && currentSSID.equals(ssid))) {
                             WifiService.this.getConnectedSSID(WifiService.this.savedCall);
                         } else {
                             call.error("CONNECTED_SSID_DOES_NOT_MATCH_REQUESTED_SSID");
                         }
-                        WifiService.this.networkCallback = this;
                     }
                     @Override
                     public void onUnavailable() {
                         PluginCall call = WifiService.this.savedCall;
                         call.error("CONNECTION_FAILED");
                     }
-                });
-
+                };
+                manager.requestNetwork(networkRequest, this.networkCallback);
             } else {
-                ConnectivityManager manager = (ConnectivityManager) this.context
-                        .getSystemService(Context.CONNECTIVITY_SERVICE);
-
                 if (this.networkCallback != null) {
                     manager.unregisterNetworkCallback(this.networkCallback);
                     this.networkCallback = null;
                 }
                 manager.bindProcessToNetwork(null);
             }
+        } else {
+            this.forceWifiUsage(useWifi);
         }
     }
     public void forceWifiUsage(boolean useWifi) {

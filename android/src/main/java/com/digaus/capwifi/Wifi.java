@@ -54,6 +54,16 @@ public class Wifi extends Plugin {
 
     }
     @PluginMethod()
+    public void disconnect(PluginCall call) {
+        if (API_VERSION >= 23 && !hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            saveCall(call);
+            pluginRequestPermission(Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            this.wifiService.disconnect(call);
+        }
+
+    }
+    @PluginMethod()
     public void connectPrefix(PluginCall call) {
         if (!call.getData().has("ssid")) {
             call.reject("Must provide an ssid");

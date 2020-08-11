@@ -6,6 +6,7 @@
 CAP_PLUGIN(Wifi, "Wifi",
         CAP_PLUGIN_METHOD(scan, CAPPluginReturnPromise);
         CAP_PLUGIN_METHOD(connect, CAPPluginReturnPromise);
+        CAP_PLUGIN_METHOD(disconnect, CAPPluginReturnPromise);
         CAP_PLUGIN_METHOD(connectPrefix, CAPPluginReturnPromise);
         CAP_PLUGIN_METHOD(getWifiIP, CAPPluginReturnPromise);
         CAP_PLUGIN_METHOD(getConnectedSSID, CAPPluginReturnPromise);

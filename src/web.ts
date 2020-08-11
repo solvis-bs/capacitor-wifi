@@ -10,19 +10,22 @@ export class WifiWeb extends WebPlugin implements WifiPlugin {
   }
 
   async scan(): Promise<{ scan: IWifiNetwork[] }> {
-    return null;
+    return { scan: [] };
   }
   async connect(_options: { ssid: string, password?: string, authType?: string }): Promise<{ ssid: string }> {
-    return { ssid: null };
+    return { ssid: '' };
+  }
+  async disconnect(): Promise<void> {
+    return;
   }
   async connectPrefix(_options: { ssid: string, password?: string }): Promise<{ ssid: string }> {
-    return { ssid: null };
+    return { ssid: '' };
   }
   async getConnectedSSID(): Promise<{ ssid: string }> {
-    return { ssid: null }
+    return { ssid: '' }
   }
   async getWifiIP(): Promise<{ ip: string }> {
-    return { ip: null };
+    return { ip: '' };
   }
 }
 

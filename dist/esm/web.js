@@ -17,27 +17,32 @@ export class WifiWeb extends WebPlugin {
     }
     scan() {
         return __awaiter(this, void 0, void 0, function* () {
-            return null;
+            return { scan: [] };
         });
     }
     connect(_options) {
         return __awaiter(this, void 0, void 0, function* () {
-            return { ssid: null };
+            return { ssid: '' };
+        });
+    }
+    disconnect() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return;
         });
     }
     connectPrefix(_options) {
         return __awaiter(this, void 0, void 0, function* () {
-            return { ssid: null };
+            return { ssid: '' };
         });
     }
     getConnectedSSID() {
         return __awaiter(this, void 0, void 0, function* () {
-            return { ssid: null };
+            return { ssid: '' };
         });
     }
     getWifiIP() {
         return __awaiter(this, void 0, void 0, function* () {
-            return { ip: null };
+            return { ip: '' };
         });
     }
 }
