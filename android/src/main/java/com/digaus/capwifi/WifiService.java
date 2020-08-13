@@ -32,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Locale;
 
 public class WifiService {
     private static String TAG = "WifiService";
@@ -119,9 +120,9 @@ public class WifiService {
             String password =  call.getString("password");
 
             String connectedSSID = this.getWifiServiceInfo(call);
+            //this.forceWifiUsageQ(false, null, null);
 
             if (!ssid.equals(connectedSSID)) {
-                this.forceWifiUsageQ(false, null);
 
                 WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
                 PatternMatcher ssidPattern = new PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX);
@@ -149,38 +150,29 @@ public class WifiService {
      * Scans networks and sends the list back on the success callback
      */
     public boolean scanNetwork(PluginCall call) {
-        Log.v(TAG, "Entering startScan");
         this.savedScanCall = call;
         final ScanSyncContext syncContext = new ScanSyncContext();
 
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "Entering onReceive");
                 PluginCall call = WifiService.this.savedScanCall;
                 synchronized (syncContext) {
                     if (syncContext.finished) {
-                        Log.v(TAG, "In onReceive, already finished");
                         return;
                     }
                     syncContext.finished = true;
                     context.unregisterReceiver(this);
                 }
-
-                Log.v(TAG, "In onReceive, success");
                 getScanResults(call);
             }
         };
 
         final Context context = this.context;
 
-        Log.v(TAG, "Submitting timeout to threadpool");
-
         this.bridge.execute(new Runnable() {
 
             public void run() {
                 PluginCall call = WifiService.this.savedScanCall;
-
-                Log.v(TAG, "Entering timeout");
 
                 final int TEN_SECONDS = 10000;
 
@@ -191,11 +183,8 @@ public class WifiService {
                     // keep going into error
                 }
 
-                Log.v(TAG, "Thread sleep done");
-
                 synchronized (syncContext) {
                     if (syncContext.finished) {
-                        Log.v(TAG, "In timeout, already finished");
                         return;
                     }
                     syncContext.finished = true;
@@ -210,8 +199,8 @@ public class WifiService {
 
         Log.v(TAG, "Registering broadcastReceiver");
         context.registerReceiver(
-                receiver,
-                new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+            receiver,
+            new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
         );
 
         if (!wifiManager.startScan()) {
@@ -239,14 +228,13 @@ public class WifiService {
 
     /**
      * Format and return WiFi IPv4 Address
-     * @return
      */
     public void getWifiIP(PluginCall call) {
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int ip = wifiInfo.getIpAddress();
         String ipString = formatIP(ip);
 
-        if (ipString != null && !ipString.equals("0.0.0.0")) {
+        if (!ipString.equals("0.0.0.0")) {
             JSObject result = new JSObject();
             result.put("ip", ipString);
             call.success(result);
@@ -256,11 +244,12 @@ public class WifiService {
     }
     private String formatIP(int ip) {
         return String.format(
-                "%d.%d.%d.%d",
-                (ip & 0xff),
-                (ip >> 8 & 0xff),
-                (ip >> 16 & 0xff),
-                (ip >> 24 & 0xff)
+            Locale.getDefault(),
+            "%d.%d.%d.%d",
+            (ip & 0xff),
+            (ip >> 8 & 0xff),
+            (ip >> 16 & 0xff),
+            (ip >> 24 & 0xff)
         );
     }
 
@@ -283,7 +272,7 @@ public class WifiService {
         String serviceInfo;
         serviceInfo = info.getSSID();
 
-        if (serviceInfo == null || serviceInfo.isEmpty() || serviceInfo == "0x") {
+        if (serviceInfo == null || serviceInfo.isEmpty() || serviceInfo.equals("0x")) {
             call.error("WIFI_INFORMATION_EMPTY");
             return null;
         }
@@ -303,94 +292,99 @@ public class WifiService {
 
         try {
 
-            if (authType.equals("WPA2")) {
-                /**
-                 * WPA2 Data format:
-                 * 0: ssid
-                 * 1: auth
-                 * 2: password
-                 */
-                wifi.SSID = ssid;
-                wifi.preSharedKey = password;
+            switch (authType) {
+                case "WPA2":
+                    /*
+                     * WPA2 Data format:
+                     * 0: ssid
+                     * 1: auth
+                     * 2: password
+                     */
+                    wifi.SSID = ssid;
+                    wifi.preSharedKey = password;
 
-                wifi.status = WifiConfiguration.Status.ENABLED;
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                wifi.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                    wifi.status = WifiConfiguration.Status.ENABLED;
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                    wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                    wifi.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+                    wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
 
-                wifi.networkId = ssidToNetworkId(ssid, authType);
+                    wifi.networkId = ssidToNetworkId(ssid, authType);
 
-            } else if (authType.equals("WPA")) {
-                /**
-                 * WPA Data format:
-                 * 0: ssid
-                 * 1: auth
-                 * 2: password
-                 */
-                wifi.SSID = ssid;
-                wifi.preSharedKey = password;
+                    break;
+                case "WPA":
+                    /*
+                     * WPA Data format:
+                     * 0: ssid
+                     * 1: auth
+                     * 2: password
+                     */
+                    wifi.SSID = ssid;
+                    wifi.preSharedKey = password;
 
-                wifi.status = WifiConfiguration.Status.ENABLED;
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                    wifi.status = WifiConfiguration.Status.ENABLED;
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                    wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                    wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
 
-                wifi.networkId = ssidToNetworkId(ssid, authType);
+                    wifi.networkId = ssidToNetworkId(ssid, authType);
 
-            } else if (authType.equals("WEP")) {
-                /**
-                 * WEP Data format:
-                 * 0: ssid
-                 * 1: auth
-                 * 2: password
-                 */
-                wifi.SSID = ssid;
+                    break;
+                case "WEP":
+                    /*
+                     * WEP Data format:
+                     * 0: ssid
+                     * 1: auth
+                     * 2: password
+                     */
+                    wifi.SSID = ssid;
 
-                if (getHexKey(password)) {
-                    wifi.wepKeys[0] = password;
-                } else {
-                    wifi.wepKeys[0] = "\"" + password + "\"";
-                }
-                wifi.wepTxKeyIndex = 0;
+                    if (getHexKey(password)) {
+                        wifi.wepKeys[0] = password;
+                    } else {
+                        wifi.wepKeys[0] = "\"" + password + "\"";
+                    }
+                    wifi.wepTxKeyIndex = 0;
 
-                wifi.status = WifiConfiguration.Status.ENABLED;
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                wifi.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-                wifi.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.SHARED);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                wifi.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                    wifi.status = WifiConfiguration.Status.ENABLED;
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                    wifi.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                    wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    wifi.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+                    wifi.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.SHARED);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                    wifi.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                    wifi.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+                    wifi.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
 
-                wifi.networkId = ssidToNetworkId(ssid, authType);
+                    wifi.networkId = ssidToNetworkId(ssid, authType);
 
-            } else if (authType.equals("NONE")) {
-                /**
-                 * OPEN Network data format:
-                 * 0: ssid
-                 * 1: auth
-                 * 2: <not used>
-                 * 3: isHiddenSSID
-                 */
-                wifi.SSID = ssid;
-                wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                wifi.networkId = ssidToNetworkId(ssid, authType);
+                    break;
+                case "NONE":
+                    /*
+                     * OPEN Network data format:
+                     * 0: ssid
+                     * 1: auth
+                     * 2: <not used>
+                     * 3: isHiddenSSID
+                     */
+                    wifi.SSID = ssid;
+                    wifi.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    wifi.networkId = ssidToNetworkId(ssid, authType);
 
-            } else {
+                    break;
+                default:
 
-                call.reject("AUTH_TYPE_NOT_SUPPORTED");
-                return -1;
+                    call.reject("AUTH_TYPE_NOT_SUPPORTED");
+                    return -1;
 
             }
             // Set network to highest priority (deprecated in API >= 26)
@@ -621,7 +615,7 @@ public class WifiService {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     canWriteFlag = true;
                     // Only need ACTION_MANAGE_WRITE_SETTINGS on 6.0.0, regular permissions suffice on later versions
-                } else if (Build.VERSION.RELEASE.toString().equals("6.0.1")) {
+                } else if (Build.VERSION.RELEASE.equals("6.0.1")) {
                     canWriteFlag = true;
                     // Don't need ACTION_MANAGE_WRITE_SETTINGS on 6.0.1, if we can positively identify it treat like 7+
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -636,7 +630,7 @@ public class WifiService {
                     }
                 }
 
-                if (((API_VERSION>= Build.VERSION_CODES.M) && canWriteFlag) || ((API_VERSION >= Build.VERSION_CODES.LOLLIPOP) && !(API_VERSION >= Build.VERSION_CODES.M))) {
+                if (API_VERSION < Build.VERSION_CODES.M || canWriteFlag) {
                     final ConnectivityManager manager = (ConnectivityManager) this.context
                             .getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkRequest networkRequest = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build();
@@ -648,10 +642,6 @@ public class WifiService {
                             } else {
                                 //This method was deprecated in API level 23
                                 ConnectivityManager.setProcessDefaultNetwork(network);
-                            }
-                            try {
-                            } catch (Exception e) {
-                                e.printStackTrace();
                             }
                             manager.unregisterNetworkCallback(this);
                         }
