@@ -653,12 +653,12 @@ public class WifiService {
                 ConnectivityManager manager = (ConnectivityManager) this.context
                         .getSystemService(Context.CONNECTIVITY_SERVICE);
                 manager.bindProcessToNetwork(null);
+                if (this.networkCallback != null) {
+                    manager.unregisterNetworkCallback(this.networkCallback);
+                    this.networkCallback = null;
+                }
             } else if (API_VERSION >= Build.VERSION_CODES.LOLLIPOP) {
                 ConnectivityManager.setProcessDefaultNetwork(null);
-            }
-            if (this.networkCallback != null) {
-                manager.unregisterNetworkCallback(this.networkCallback);
-                this.networkCallback = null;
             }
         }
     }
