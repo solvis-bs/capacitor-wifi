@@ -634,7 +634,7 @@ public class WifiService {
                     final ConnectivityManager manager = (ConnectivityManager) this.context
                             .getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkRequest networkRequest = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build();
-                    manager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
+                    this.networkCallback = new ConnectivityManager.NetworkCallback() {
                         @Override
                         public void onAvailable(Network network) {
                             if (API_VERSION >= Build.VERSION_CODES.M) {
@@ -644,7 +644,8 @@ public class WifiService {
                                 ConnectivityManager.setProcessDefaultNetwork(network);
                             }
                         }
-                    });
+                    };
+                    manager.requestNetwork(networkRequest, this.networkCallback);
                 }
             }
         } else {
@@ -654,6 +655,10 @@ public class WifiService {
                 manager.bindProcessToNetwork(null);
             } else if (API_VERSION >= Build.VERSION_CODES.LOLLIPOP) {
                 ConnectivityManager.setProcessDefaultNetwork(null);
+            }
+            if (this.networkCallback != null) {
+                manager.unregisterNetworkCallback(this.networkCallback);
+                this.networkCallback = null;
             }
         }
     }
