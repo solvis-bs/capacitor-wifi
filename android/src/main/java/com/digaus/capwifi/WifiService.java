@@ -643,7 +643,6 @@ public class WifiService {
                                 //This method was deprecated in API level 23
                                 ConnectivityManager.setProcessDefaultNetwork(network);
                             }
-                            manager.unregisterNetworkCallback(this);
                         }
                     });
                 }
