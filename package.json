@@ -5,20 +5,24 @@
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "scripts": {
-    "build": "npm run clean && tsc",
-    "clean": "rm -rf ./dist",
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rimraf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"
   },
   "author": "Dirk Gausmann",
   "license": "MIT",
-  "dependencies": {
-    "@capacitor/core": "latest"
-  },
   "devDependencies": {
-    "typescript": "^3.9.7",
-    "@capacitor/ios": "latest",
-    "@capacitor/android": "latest"
+    "@capacitor/android": "^3.0.0",
+    "@capacitor/core": "^3.0.0",
+    "@capacitor/ios": "^3.0.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "rimraf": "^3.0.0",
+    "rollup": "^2.21.0",
+    "typescript": "^3.9.7"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^3.0.0"
   },
   "files": [
     "dist/",

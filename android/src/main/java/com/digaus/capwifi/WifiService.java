@@ -51,8 +51,8 @@ public class WifiService {
 
     public void load(Bridge bridge) {
         this.bridge = bridge;
-        this.wifiManager = (WifiManager) this.bridge.getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        this.connectivityManager = (ConnectivityManager)  this.bridge.getActivity().getApplicationContext().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        this.wifiManager = (WifiManager) this.bridge.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        this.connectivityManager = (ConnectivityManager)  this.bridge.getContext().getApplicationContext().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         this.context = this.bridge.getContext();
     }
     public void connect(PluginCall call) {

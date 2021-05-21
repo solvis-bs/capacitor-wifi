@@ -1,8 +1,3 @@
-declare module "@capacitor/core" {
-    interface PluginRegistry {
-        Wifi: WifiPlugin;
-    }
-}
 export interface IWifiNetwork {
     level: number;
     SSID: string;

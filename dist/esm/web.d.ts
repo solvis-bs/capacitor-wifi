@@ -1,5 +1,5 @@
-import { WebPlugin } from '@capacitor/core';
-import { WifiPlugin, IWifiNetwork } from './definitions';
+import { WebPlugin } from "@capacitor/core";
+import { WifiPlugin, IWifiNetwork } from "./definitions";
 export declare class WifiWeb extends WebPlugin implements WifiPlugin {
     constructor();
     scan(): Promise<{
@@ -26,5 +26,3 @@ export declare class WifiWeb extends WebPlugin implements WifiPlugin {
         ip: string;
     }>;
 }
-declare const Wifi: WifiWeb;
-export { Wifi };

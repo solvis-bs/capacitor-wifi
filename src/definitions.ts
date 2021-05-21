@@ -1,9 +1,3 @@
-declare module "@capacitor/core" {
-  interface PluginRegistry {
-    Wifi: WifiPlugin;
-  }
-}
-
 export interface IWifiNetwork {
   level: number;
   SSID: string;
@@ -18,9 +12,16 @@ export interface IWifiNetwork {
 
 export interface WifiPlugin {
   scan(): Promise<{ scan: IWifiNetwork[] }>;
-  connect(options: { ssid: string, password?: string, authType?: string }): Promise<{ ssid: string }>;
+  connect(options: {
+    ssid: string;
+    password?: string;
+    authType?: string;
+  }): Promise<{ ssid: string }>;
   disconnect(): Promise<void>;
-  connectPrefix(options: { ssid: string, password?: string }): Promise<{ ssid: string }>;
+  connectPrefix(options: {
+    ssid: string;
+    password?: string;
+  }): Promise<{ ssid: string }>;
   getWifiIP(): Promise<{ ip: string }>;
   getConnectedSSID(): Promise<{ ssid: string }>;
 }
