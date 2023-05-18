@@ -1,4 +1,4 @@
-var capacitorPlugin = (function (exports, core) {
+var capacitorWifi = (function (exports, core) {
     'use strict';
 
     const Wifi = core.registerPlugin("Wifi", {

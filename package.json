@@ -5,24 +5,24 @@
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "scripts": {
-    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "build": "yarn clean && tsc && rollup -c rollup.config.js",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "yarn build"
   },
   "author": "Dirk Gausmann",
   "license": "MIT",
   "devDependencies": {
-    "@capacitor/android": "^3.5.1",
-    "@capacitor/core": "^3.5.1",
-    "@capacitor/ios": "^3.5.1",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "rimraf": "^3.0.0",
-    "rollup": "^2.21.0",
-    "typescript": "^4.7.2"
+    "rimraf": "^5.0.1",
+    "rollup": "2.77.2",
+    "typescript": "^5.0.4"
   },
   "peerDependencies": {
-    "@capacitor/core": "^3.0.0"
+    "@capacitor/core": "^5.0.0"
   },
   "files": [
     "dist/",
@@ -50,5 +50,6 @@
   },
   "bugs": {
     "url": "https://github.com/HalleyAssist/capacitor-wifi/issues"
-  }
+  },
+  "packageManager": "yarn@3.5.1"
 }
